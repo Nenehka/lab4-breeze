@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bootstrapModal.show();
     };
 
-    // Кнопки "Подробнее (модалка)"
+    // Кнопки "Подробнее"
     const detailButtons = document.querySelectorAll('.btn-detail');
     detailButtons.forEach((btn, defaultIndex) => {
         const index = btn.dataset.index

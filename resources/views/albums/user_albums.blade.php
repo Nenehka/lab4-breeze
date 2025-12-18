@@ -55,7 +55,7 @@
                             {{-- Модалка и детальная страница доступны всем --}}
                             <button class="btn btn-btn btn-detail mb-2 w-100"
                                     data-index="{{ $index }}">
-                                Подробнее (модалка)
+                                Подробнее
                             </button>
 
                             <a href="{{ route('albums.show', $album) }}"
