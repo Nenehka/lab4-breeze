@@ -9,11 +9,17 @@
 
     <div class="container-fluid container-xxl my-5">
 
-        {{-- Кнопка добавления нового альбома --}}
-        <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('albums.create') }}" class="btn btn-success">
-                Добавить альбом
-            </a>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="title-text mb-0">Альбомы группы</h2>
+
+            <div class="d-flex gap-2">
+                <a href="{{ route('users.index') }}" class="btn btn-outline-light">
+                    Список пользователей
+                </a>
+                <a href="{{ route('albums.create') }}" class="btn btn-success">
+                    Добавить альбом
+                </a>
+            </div>
         </div>
 
         <div class="row g-3 g-sm-4 cards-row justify-content-center">
@@ -53,34 +59,38 @@
                         </div>
 
                         <div class="card-footer text-center">
-                            {{-- Кнопка для модального окна (как в лабе‑2) --}}
+                            {{-- Кнопка модалки --}}
                             <button class="btn btn-btn btn-detail mb-2 w-100"
                                     data-index="{{ $index }}">
                                 Подробнее (модалка)
                             </button>
 
-                            {{-- Переход на детальную страницу show --}}
+                            {{-- Детальная страница доступна всем авторизованным --}}
                             <a href="{{ route('albums.show', $album) }}"
-                               class="btn btn-primary mb-2 w-100">
+                            class="btn btn-primary mb-2 w-100">
                                 Детальная страница
                             </a>
 
-                            {{-- Редактирование --}}
-                            <a href="{{ route('albums.edit', $album) }}"
-                               class="btn btn-secondary mb-2 w-100">
-                                Редактировать
-                            </a>
+                            {{-- Редактировать можно только если Gate разрешает --}}
+                            @can('update-album', $album)
+                                <a href="{{ route('albums.edit', $album) }}"
+                                class="btn btn-secondary mb-2 w-100">
+                                    Редактировать
+                                </a>
+                            @endcan
 
-                            {{-- Удаление (Soft Delete) --}}
-                            <form action="{{ route('albums.destroy', $album) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Удалить этот альбом?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger w-100">
-                                    Удалить
-                                </button>
-                            </form>
+                            {{-- Удалять можно только если Gate разрешает --}}
+                            @can('delete-album', $album)
+                                <form action="{{ route('albums.destroy', $album) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Удалить этот альбом?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger w-100">
+                                        Удалить
+                                    </button>
+                                </form>
+                            @endcan
                         </div>
                     </div>
                 </div>

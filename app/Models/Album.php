@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class Album extends Model
 {
@@ -16,11 +17,30 @@ class Album extends Model
         'description',
         'release_date',
         'image_path',
+        'user_id',
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function (Album $album) {
+            $user = Auth::user();
+
+            // Если нет пользователя (например, вызывают из консоли) — просто разрешаем.
+            if (!$user) {
+                return true;
+            }
+
+            // Запрещаем удаление, если это не владелец и не админ.
+            if (!$user->is_admin && $album->user_id !== $user->id) {
+                return false; // отменяет операцию delete()
+            }
+
+            return true;
+        });
+    }
 
     // Мутаторы/аксессоры для даты (расширенный уровень)
     // Храним в БД как Y-m-d, наружу отдаём как d.m.Y
-
     public function getReleaseDateAttribute($value)
     {
         return $value ? Carbon::parse($value)->format('d.m.Y') : null;
@@ -36,5 +56,10 @@ class Album extends Model
         // ожидаем ввод в формате дд.мм.гггг
         $this->attributes['release_date'] =
             Carbon::createFromFormat('d.m.Y', $value)->format('Y-m-d');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

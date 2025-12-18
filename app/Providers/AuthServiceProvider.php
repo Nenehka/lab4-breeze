@@ -2,13 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Album;
+use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
     /**
-     * The policy mappings for the application.
+     * The model to policy mappings for the application.
      *
      * @var array<class-string, class-string>
      */
@@ -18,13 +20,28 @@ class AuthServiceProvider extends ServiceProvider
 
     /**
      * Register any authentication / authorization services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
 
-        //
+        // Может редактировать альбом: владелец или админ
+        Gate::define('update-album', function (User $user, Album $album) {
+            return $user->is_admin || $album->user_id === $user->id;
+        });
+
+        // Может мягко удалить альбом: владелец или админ
+        Gate::define('delete-album', function (User $user, Album $album) {
+            return $user->is_admin || $album->user_id === $user->id;
+        });
+
+        // Восстановить и удалить навсегда может только админ
+        Gate::define('restore-album', function (User $user, Album $album) {
+            return $user->is_admin;
+        });
+
+        Gate::define('force-delete-album', function (User $user, Album $album) {
+            return $user->is_admin;
+        });
     }
 }

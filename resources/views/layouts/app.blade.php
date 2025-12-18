@@ -13,7 +13,7 @@
     {{-- Скомпилированные стили из Laravel Mix --}}
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
     {{-- НАВБАР --}}
     <nav class="navbar navbar-expand-lg navbar-dark">
@@ -23,7 +23,18 @@
                 Музыкальные альбомы группы Rammstein
             </a>
             <div class="ms-auto">
-                <button class="btn btn-btn" id="loginButton">Войти</button>
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-btn">
+                            Выйти
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-btn" id="loginButton">
+                        Войти
+                    </a>
+                @endauth
             </div>
         </div>
     </nav>
@@ -34,7 +45,7 @@
     </main>
 
     {{-- ФУТЕР --}}
-    <footer class="footer py-4">
+    <footer class="footer py-4 mt-auto">
         <div class="container-fluid container-xxl d-flex justify-content-between align-items-center flex-wrap gap-3">
             <p class="mb-0 fw-bold author-text">Паршукова Елена</p>
             <div class="d-flex gap-3 socials">
@@ -52,7 +63,7 @@
         </div>
     </footer>
 
-    {{-- МОДАЛЬНОЕ ОКНО (как в лабе‑2) --}}
+    {{-- МОДАЛЬНОЕ ОКНО --}}
     <div class="modal fade" id="rammsteinModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -88,7 +99,7 @@
         </div>
     </div>
 
-    {{-- Скомпилированный JS Laravel Mix (в котором уже Bootstrap + твой код) --}}
+    {{-- Скомпилированный JS Laravel Mix (Bootstrap + код) --}}
     <script src="{{ mix('js/app.js') }}"></script>
 </body>
 </html>

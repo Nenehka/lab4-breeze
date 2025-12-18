@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Album;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AlbumController extends Controller
 {
     public function index()
     {
-        // новые альбомы в конце списка
-        $albums = Album::orderBy('created_at', 'asc')->get();
-        // или:
-        // $albums = Album::oldest()->get();
-        return view('albums.index', compact('albums'));
+        $user = auth()->user();
+
+        // Альбомы только текущего пользователя, без удалённых
+        $albums = $user->albums()->latest()->get();
+
+        return view('albums.index', compact('albums', 'user'));
     }
 
     public function show(Album $album)
@@ -31,8 +34,10 @@ class AlbumController extends Controller
 
     public function store(Request $request)
     {
-        // второй параметр можно не указывать — по умолчанию false (создание)
         $data = $this->validateAlbum($request);
+
+        // Привязываем альбом к текущему пользователю
+        $data['user_id'] = auth()->id();
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('albums', 'public');
@@ -48,15 +53,17 @@ class AlbumController extends Controller
     
     public function edit(Album $album)
     {
+        Gate::authorize('update-album', $album);
+
         return view('albums.edit', compact('album'));
     }
 
     public function update(Request $request, Album $album)
     {
-        // текстовые поля + дата
+        Gate::authorize('update-album', $album);
+
         $data = $this->validateAlbum($request, true);
 
-        // если загрузили новую картинку — сохраним и заменим путь
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('albums', 'public');
             $data['image_path'] = $path;
@@ -71,11 +78,54 @@ class AlbumController extends Controller
 
     public function destroy(Album $album)
     {
-        $album->delete(); // Soft Delete из-за use SoftDeletes в модели
+        Gate::authorize('delete-album', $album);
+
+        $album->delete(); // Soft Delete
 
         return redirect()
             ->route('albums.index')
             ->with('success', 'Альбом удалён.');
+    }
+
+    public function usersList()
+    {
+        $users = User::orderBy('name')->get();
+
+        return view('users.index', compact('users'));
+    }
+
+    public function userAlbums(User $user)
+    {
+        $currentUser = auth()->user();
+
+        // Если админ — видит и удалённые, иначе только живые
+        $query = $user->albums()->orderByDesc('created_at');
+
+        if ($currentUser->is_admin) {
+            $albums = $query->withTrashed()->get();
+        } else {
+            $albums = $query->get();
+        }
+
+        return view('albums.user_albums', compact('user', 'albums', 'currentUser'));
+    }
+
+    public function restore(Album $album)
+    {
+        Gate::authorize('restore-album', $album);
+
+        $album->restore();
+
+        return back()->with('success', 'Альбом восстановлен.');
+    }
+
+    public function forceDelete(Album $album)
+    {
+        Gate::authorize('force-delete-album', $album);
+
+        $album->forceDelete();
+
+        return back()->with('success', 'Альбом удалён безвозвратно.');
     }
 
     // protected function validateAlbum(Request $request): array
